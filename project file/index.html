@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sustainable Smart City AI Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .tab-content {
+      border-left: 1px solid #dee2e6;
+      border-right: 1px solid #dee2e6;
+      border-bottom: 1px solid #dee2e6;
+      padding: 20px;
+      border-radius: 0 0 5px 5px;
+    }
+    .nav-tabs .nav-link.active {
+      font-weight: bold;
+      border-top: 3px solid #198754;
+    }
+    .file-upload-wrapper {
+      border: 2px dashed #198754;
+      border-radius: 5px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .file-upload-wrapper:hover {
+      background-color: rgba(25, 135, 84, 0.1);
+    }
+    #loader {
+      display: none;
+    }
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+    .response-box {
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    .response-box:hover {
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+    .text-muted-light {
+      color: #adb5bd;
+    }
+    #weatherIcon {
+      background-color: rgba(25, 135, 84, 0.1);
+      border-radius: 50%;
+      padding: 5px;
+    }
+    .temperature-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      text-align: center;
+      padding: 10px 15px;
+      border-radius: 8px;
+      flex: 1;
+      margin: 0 5px;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-bottom: 20px;
+    }
+    
+    /* Improved list styling */
+    #responseText ol,
+    #responseText ul,
+    #summaryText ol,
+    #summaryText ul,
+    #tempAnalysis ol,
+    #tempAnalysis ul {
+      margin-left: 20px;
+      padding-left: 20px;
+    }
+    
+    #responseText ol li,
+    #responseText ul li,
+    #summaryText ol li,
+    #summaryText ul li,
+    #tempAnalysis ol li,
+    #tempAnalysis ul li {
+      margin-bottom: 8px;
+    }
+    
+    #responseText ul,
+    #summaryText ul,
+    #tempAnalysis ul {
+      list-style-type: disc;
+    }
+    
+    /* Footer styles */
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #6c757d;
+      border-top: 1px solid #e9ecef;
+      padding-top: 1rem;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="text-center mb-4">
+      <h1 class="text-success"><i class="bi bi-building-fill"></i> Smart City AI Assistant</h1>
+      <p class="lead text-muted">Your companion for sustainable urban development</p>
+    </div>
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chat" type="button" role="tab" aria-controls="chat" aria-selected="true">
+          <i class="bi bi-chat-dots"></i> Chat Assistant
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="document-tab" data-bs-toggle="tab" data-bs-target="#document" type="button" role="tab" aria-controls="document" aria-selected="false">
+          <i class="bi bi-file-earmark-text"></i> Document Analysis
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="weather-tab" data-bs-toggle="tab" data-bs-target="#weather" type="button" role="tab" aria-controls="weather" aria-selected="false">
+          <i class="bi bi-cloud-sun"></i> Weather Forecast
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="temperature-tab" data-bs-toggle="tab" data-bs-target="#temperature" type="button" role="tab" aria-controls="temperature" aria-selected="false">
+          <i class="bi bi-graph-up"></i> Temperature Comparison
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content bg-white" id="myTabContent">
+      <!-- Chat Assistant Tab -->
+      <div class="tab-pane fade show active" id="chat" role="tabpanel" aria-labelledby="chat-tab">
+        <div class="mb-3">
+          <label for="queryInput" class="form-label fw-bold">Enter your Smart City query:</label>
+          <textarea id="queryInput" class="form-control" rows="4" placeholder="e.g., How to reduce urban waste in my locality?"></textarea>
+        </div>
+        <button class="btn btn-success mb-3" onclick="askAssistant()">
+          <i class="bi bi-send"></i> Ask Assistant
+        </button>
+        <div id="chatLoader" class="text-center my-4" style="display: none;">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Processing your query...</p>
+        </div>
+        <div id="responseContainer" class="card p-4 response-box" style="display: none;">
+          <h5 class="text-success"><i class="bi bi-robot"></i> Assistant Response:</h5>
+          <div id="responseText" class="mb-0"></div>
+        </div>
+      </div>
+
+      <!-- Document Analysis Tab -->
+      <div class="tab-pane fade" id="document" role="tabpanel" aria-labelledby="document-tab">
+        <div class="mb-4">
+          <p class="lead">Upload a document to get a sustainability-focused summary</p>
+          <div id="fileUploadArea" class="file-upload-wrapper" onclick="document.getElementById('documentFile').click()">
+            <i class="bi bi-cloud-upload fs-1 text-success"></i>
+            <h5 class="mt-2">Drag & drop or click to upload</h5>
+            <p class="text-muted mb-0">Supported formats: PDF, DOCX, TXT</p>
+            <input type="file" id="documentFile" class="d-none" onchange="handleFileSelect()" accept=".pdf,.docx,.doc,.txt">
+          </div>
+          <div id="fileInfo" class="alert alert-info d-none">
+            <i class="bi bi-file-earmark"></i> <span id="fileName"></span>
+            <button class="btn btn-sm btn-outline-secondary ms-2" onclick="resetFileUpload()">
+              <i class="bi bi-x"></i> Remove
+            </button>
+          </div>
+          <button id="analyzeBtn" class="btn btn-success d-none" onclick="analyzeDocument()">
+            <i class="bi bi-search"></i> Analyze Document
+          </button>
+        </div>
+        <div id="documentLoader" class="text-center my-4" style="display: none;">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Analyzing your document...</p>
+        </div>
+        <div id="summaryContainer" class="card p-4 response-box" style="display: none;">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="text-success mb-0"><i class="bi bi-file-text"></i> Document Summary</h5>
+            <span class="badge bg-success" id="docName"></span>
+          </div>
+          <div id="summaryText" class="mb-0"></div>
+        </div>
+      </div>
+
+      <!-- Weather Forecast Tab -->
+      <div class="tab-pane fade" id="weather" role="tabpanel" aria-labelledby="weather-tab">
+        <div class="mb-3">
+          <label for="cityInput" class="form-label fw-bold">Enter City Name:</label>
+          <div class="input-group mb-3">
+            <input type="text" id="cityInput" class="form-control" placeholder="e.g., London, New York, Tokyo">
+            <button class="btn btn-success" onclick="getWeather()">
+              <i class="bi bi-search"></i> Get Weather
+            </button>
+          </div>
+        </div>
+        <div id="weatherLoader" class="text-center my-4" style="display: none;">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Fetching weather data...</p>
+        </div>
+        <div id="weatherContainer" class="card p-4 response-box" style="display: none;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="text-success mb-0"><i class="bi bi-geo-alt"></i> <span id="weatherCity"></span></h5>
+            <img id="weatherIcon" src="" alt="Weather icon" style="width: 50px; height: 50px;">
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-1"><strong>Temperature:</strong> <span id="weatherTemp"></span>°C</p>
+              <p class="mb-1"><strong>Feels Like:</strong> <span id="weatherFeelsLike"></span>°C</p>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1"><strong>Humidity:</strong> <span id="weatherHumidity"></span>%</p>
+              <p class="mb-1"><strong>Conditions:</strong> <span id="weatherDesc"></span></p>
+            </div>
+          </div>
+        </div>
+        <div id="weatherError" class="alert alert-danger mt-3" style="display: none;"></div>
+      </div>
+
+      <!-- Temperature Comparison Tab -->
+      <div class="tab-pane fade" id="temperature" role="tabpanel" aria-labelledby="temperature-tab">
+        <div class="mb-3">
+          <label for="tempCityInput" class="form-label fw-bold">Enter City Name:</label>
+          <div class="input-group mb-3">
+            <input type="text" id="tempCityInput" class="form-control" placeholder="e.g., London, New York, Tokyo">
+            <button class="btn btn-success" onclick="getTempComparison()">
+              <i class="bi bi-search"></i> Compare Temperatures
+            </button>
+          </div>
+        </div>
+        <div id="tempLoader" class="text-center my-4" style="display: none;">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 text-muted">Fetching and analyzing temperature data...</p>
+        </div>
+        <div id="tempContainer" class="card p-4 response-box" style="display: none;">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="text-success mb-0"><i class="bi bi-graph-up"></i> Temperature Comparison: <span id="tempCity"></span></h5>
+          </div>
+          
+          <div class="temperature-stats mb-4">
+            <div class="stat-card bg-light">
+              <p class="fs-6 mb-1">Current Year Avg</p>
+              <h4 class="text-primary mb-0"><span id="currentYearTemp"></span>°C</h4>
+            </div>
+            <div class="stat-card bg-light">
+              <p class="fs-6 mb-1">Previous Year Avg</p>
+              <h4 class="text-secondary mb-0"><span id="prevYearTemp"></span>°C</h4>
+            </div>
+            <div class="stat-card" id="diffCard">
+              <p class="fs-6 mb-1">Difference</p>
+              <h4 class="mb-0"><span id="tempDiff"></span>°C</h4>
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="temperatureChart"></canvas>
+          </div>
+          
+          <div class="mt-3">
+            <h5 class="text-success">Analysis:</h5>
+            <div id="tempAnalysis" class="mb-0"></div>
+          </div>
+        </div>
+        <div id="tempError" class="alert alert-danger mt-3" style="display: none;"></div>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer mt-4">
+      <p class="mb-1">Team Meraki | IBM Granite Model</p>
+      <p class="mb-1">By</p>
+      <p class="mb-0">vinaykanuka@gmail.com</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Chat functionality
+    async function askAssistant() {
+      const query = document.getElementById("queryInput").value.trim();
+      const responseBox = document.getElementById("responseContainer");
+      const responseText = document.getElementById("responseText");
+      const loader = document.getElementById("chatLoader");
+      
+      if (!query) {
+        alert("Please enter a query.");
+        return;
+      }
+      
+      responseBox.style.display = "none";
+      loader.style.display = "block";
+      
+      try {
+        const res = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+        
+        // Process the response to preserve numbered lists and formatting
+        responseText.innerHTML = formatResponse(data.response);
+        
+        loader.style.display = "none";
+        responseBox.style.display = "block";
+      } catch (error) {
+        responseText.innerHTML = "Error occurred while processing your request.";
+        loader.style.display = "none";
+        responseBox.style.display = "block";
+      }
+    }
+    
+    // Improved function to properly format responses with lists and paragraphs
+    function formatResponse(text) {
+      // Split by line and filter out empty lines
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      let formattedText = '';
+      let inList = false;
+      let isOrderedList = false;
+      let listContent = '';
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const isNumberedItem = line.match(/^\d+\.\s+/);
+        const isBulletItem = line.match(/^[-*•]\s+/);
+        
+        if (isNumberedItem || isBulletItem) {
+          if (!inList) {
+            // Start a new list
+            inList = true;
+            isOrderedList = !!isNumberedItem;
+            listContent = '<li>' + line.replace(/^(\d+\.|[-*•])\s+/, '') + '</li>';
+          } else {
+            // Continue the current list
+            listContent += '<li>' + line.replace(/^(\d+\.|[-*•])\s+/, '') + '</li>';
+          }
+        } else {
+          if (inList) {
+            // End the current list
+            formattedText += isOrderedList ? '<ol>' + listContent + '</ol>' : '<ul>' + listContent + '</ul>';
+            inList = false;
+            listContent = '';
+          }
+          // Add normal paragraph
+          formattedText += '<p>' + line + '</p>';
+        }
+      }
+      
+      // If we ended while still in a list
+      if (inList) {
+        formattedText += isOrderedList ? '<ol>' + listContent + '</ol>' : '<ul>' + listContent + '</ul>';
+      }
+      
+      return formattedText || text; // Fallback to original text if empty
+    }
+    
+    // Document upload functionality
+    function handleFileSelect() {
+      const fileInput = document.getElementById("documentFile");
+      const fileInfo = document.getElementById("fileInfo");
+      const fileName = document.getElementById("fileName");
+      const analyzeBtn = document.getElementById("analyzeBtn");
+      
+      if (fileInput.files.length > 0) {
+        fileName.textContent = fileInput.files[0].name;
+        fileInfo.classList.remove("d-none");
+        analyzeBtn.classList.remove("d-none");
+      }
+    }
+    
+    function resetFileUpload() {
+      const fileInput = document.getElementById("documentFile");
+      const fileInfo = document.getElementById("fileInfo");
+      const analyzeBtn = document.getElementById("analyzeBtn");
+      
+      fileInput.value = "";
+      fileInfo.classList.add("d-none");
+      analyzeBtn.classList.add("d-none");
+    }
+    
+    // Adding drag and drop functionality
+    const dropArea = document.getElementById('fileUploadArea');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+      dropArea.style.backgroundColor = 'rgba(25, 135, 84, 0.1)';
+    }
+    
+    function unhighlight() {
+      dropArea.style.backgroundColor = '';
+    }
+    
+    dropArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      const fileInput = document.getElementById("documentFile");
+      
+      if (files.length > 0) {
+        fileInput.files = files;
+        handleFileSelect();
+      }
+    }
+    
+    async function analyzeDocument() {
+      const fileInput = document.getElementById("documentFile");
+      const summaryBox = document.getElementById("summaryContainer");
+      const summaryText = document.getElementById("summaryText");
+      const docName = document.getElementById("docName");
+      const loader = document.getElementById("documentLoader");
+      
+      if (!fileInput.files.length) {
+        alert("Please select a file first.");
+        return;
+      }
+      
+      summaryBox.style.display = "none";
+      loader.style.display = "block";
+      
+      const formData = new FormData();
+      formData.append("document", fileInput.files[0]);
+      
+      try {
+        const res = await fetch("/upload-document", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        
+        if (data.error) {
+          summaryText.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        } else {
+          // Process the summary to preserve numbered lists and formatting
+          summaryText.innerHTML = formatResponse(data.summary);
+          docName.textContent = data.original_filename;
+        }
+        
+        loader.style.display = "none";
+        summaryBox.style.display = "block";
+      } catch (error) {
+        summaryText.innerHTML = "Error occurred while processing your document.";
+        loader.style.display = "none";
+        summaryBox.style.display = "block";
+      }
+    }
+    
+    // Weather functionality
+    async function getWeather() {
+      const city = document.getElementById("cityInput").value.trim();
+      const weatherContainer = document.getElementById("weatherContainer");
+      const weatherLoader = document.getElementById("weatherLoader");
+      const weatherError = document.getElementById("weatherError");
+      
+      if (!city) {
+        alert("Please enter a city name.");
+        return;
+      }
+      
+      weatherContainer.style.display = "none";
+      weatherError.style.display = "none";
+      weatherLoader.style.display = "block";
+      
+      try {
+        const res = await fetch("/get-weather", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ city })
+        });
+        const data = await res.json();
+        
+        if (data.error) {
+          weatherError.textContent = data.error;
+          weatherError.style.display = "block";
+        } else {
+          document.getElementById("weatherCity").textContent = `${data.city}, ${data.country}`;
+          document.getElementById("weatherTemp").textContent = data.temp;
+          document.getElementById("weatherFeelsLike").textContent = data.feels_like;
+          document.getElementById("weatherHumidity").textContent = data.humidity;
+          document.getElementById("weatherDesc").textContent = data.description;
+          
+          // Set weather icon
+          const iconUrl = `https://openweathermap.org/img/wn/${data.icon}@2x.png`;
+          document.getElementById("weatherIcon").src = iconUrl;
+          
+          weatherContainer.style.display = "block";
+        }
+        
+        weatherLoader.style.display = "none";
+      } catch (error) {
+        weatherError.textContent = "Error occurred while fetching weather data.";
+        weatherError.style.display = "block";
+        weatherLoader.style.display = "none";
+      }
+    }
+    
+    // Temperature comparison functionality
+    let temperatureChart = null;
+    
+    async function getTempComparison() {
+      const city = document.getElementById("tempCityInput").value.trim();
+      const tempContainer = document.getElementById("tempContainer");
+      const tempLoader = document.getElementById("tempLoader");
+      const tempError = document.getElementById("tempError");
+      
+      if (!city) {
+        alert("Please enter a city name.");
+        return;
+      }
+      
+      tempContainer.style.display = "none";
+      tempError.style.display = "none";
+      tempLoader.style.display = "block";
+      
+      try {
+        const res = await fetch("/get-temperature-comparison", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ city })
+        });
+        const data = await res.json();
+        
+        if (data.error) {
+          tempError.textContent = data.error;
+          tempError.style.display = "block";
+        } else {
+          document.getElementById("tempCity").textContent = `${data.city}, ${data.country}`;
+          document.getElementById("currentYearTemp").textContent = data.currentYearAvg;
+          document.getElementById("prevYearTemp").textContent = data.lastYearAvg;
+          document.getElementById("tempDiff").textContent = data.difference;
+          
+          // Format the analysis text to preserve numbered lists if any
+          document.getElementById("tempAnalysis").innerHTML = formatResponse(data.analysis);
+          
+          // Set the color of the difference card based on the value
+          const diffCard = document.getElementById("diffCard");
+          const diffValue = parseFloat(data.difference);
+          
+          if (diffValue > 0.5) {
+            diffCard.classList.add("bg-danger", "text-white");
+            diffCard.classList.remove("bg-success", "bg-warning", "bg-light");
+          } else if (diffValue > 0) {
+            diffCard.classList.add("bg-warning");
+            diffCard.classList.remove("bg-success", "bg-danger", "bg-light", "text-white");
+          } else if (diffValue < -0.5) {
+            diffCard.classList.add("bg-primary", "text-white");
+            diffCard.classList.remove("bg-success", "bg-warning", "bg-danger", "bg-light");
+          } else {
+            diffCard.classList.add("bg-success", "text-white");
+            diffCard.classList.remove("bg-warning", "bg-danger", "bg-primary", "bg-light");
+          }
+          
+          // Create the temperature comparison chart
+          createTempChart(data.chartData);
+          
+          tempContainer.style.display = "block";
+        }
+        
+        tempLoader.style.display = "none";
+      } catch (error) {
+        tempError.textContent = "Error occurred while fetching temperature data.";
+        tempError.style.display = "block";
+        tempLoader.style.display = "none";
+      }
+    }
+    
+    function createTempChart(chartData) {
+      const ctx = document.getElementById('temperatureChart').getContext('2d');
+      
+      // Destroy previous chart instance if it exists
+      if (temperatureChart) {
+        temperatureChart.destroy();
+      }
+      
+      // Extract data for the chart
+      const labels = chartData.map(item => item.date);
+      const currentYearData = chartData.map(item => item.current);
+      const lastYearData = chartData.map(item => item.historical);
+      
+      // Create new chart
+      temperatureChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Current Year',
+              data: currentYearData,
+              borderColor: 'rgb(54, 162, 235)',
+              backgroundColor: 'rgba(54, 162, 235, 0.1)',
+              borderWidth: 2,
+              tension: 0.3,
+              fill: true
+            },
+            {
+              label: 'Previous Year',
+              data: lastYearData,
+              borderColor: 'rgb(128, 128, 128)',
+              backgroundColor: 'rgba(128, 128, 128, 0.1)',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += context.parsed.y + '°C';
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Temperature (°C)'
+              }
+            }
+          },
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          }
+        }
+      });
+    }
+    
+    // Add keyboard event listeners
+    document.getElementById("queryInput").addEventListener("keypress", function(event) {
+      if (event.key === "Enter" && event.ctrlKey) {
+        event.preventDefault();
+        askAssistant();
+      }
+    });
+    
+    document.getElementById("cityInput").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        getWeather();
+      }
+    });
+    
+    document.getElementById("tempCityInput").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        getTempComparison();
+      }
+    });
+  </script>
+</body>
+</html>
